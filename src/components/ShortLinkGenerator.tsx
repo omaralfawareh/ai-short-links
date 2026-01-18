@@ -47,6 +47,11 @@ export default function ShortLinkGenerator() {
     }
   };
 
+  const handleCreateAnother = () => {
+    // Reset the page to allow creating another link
+    window.location.reload();
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto px-4 sm:px-6">
       {/* Toast Notification */}
@@ -182,12 +187,23 @@ export default function ShortLinkGenerator() {
 
                 {/* Error Display */}
                 {aliasState.error && aliasState.message && (
-                  <div className="p-4 bg-red-900/20 border border-red-600 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <p className="text-sm text-red-400">{aliasState.message}</p>
+                  <div className="space-y-3">
+                    <div className="p-4 bg-red-900/20 border border-red-600 rounded-lg">
+                      <div className="flex items-center gap-2 mb-3">
+                        <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <p className="text-sm text-red-400">{aliasState.message}</p>
+                      </div>
+                      <button
+                        onClick={handleCreateAnother}
+                        className="w-full py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Try Again
+                      </button>
                     </div>
                   </div>
                 )}
@@ -240,12 +256,23 @@ export default function ShortLinkGenerator() {
 
               {/* AI Link Generation Error Display */}
               {aiLinkState.error && aiLinkState.message && (
-                <div className="p-4 bg-red-900/20 border border-red-600 rounded-lg mt-6">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <p className="text-sm text-red-400">{aiLinkState.message}</p>
+                <div className="space-y-3 mt-6">
+                  <div className="p-4 bg-red-900/20 border border-red-600 rounded-lg">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <p className="text-sm text-red-400">{aiLinkState.message}</p>
+                    </div>
+                    <button
+                      onClick={handleCreateAnother}
+                      className="w-full py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Try Again
+                    </button>
                   </div>
                 </div>
               )}
@@ -272,6 +299,17 @@ export default function ShortLinkGenerator() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Create Another Link Button */}
+                  <button
+                    onClick={handleCreateAnother}
+                    className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Another Link
+                  </button>
                 </div>
               )}
             </div>
@@ -369,12 +407,23 @@ export default function ShortLinkGenerator() {
 
           {/* Custom Link Generation Error Display */}
           {aliasMode === "custom" && linkState.error && linkState.message && (
-            <div className="p-4 bg-red-900/20 border border-red-600 rounded-lg">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <p className="text-sm text-red-400">{linkState.message}</p>
+            <div className="space-y-3">
+              <div className="p-4 bg-red-900/20 border border-red-600 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <p className="text-sm text-red-400">{linkState.message}</p>
+                </div>
+                <button
+                  onClick={handleCreateAnother}
+                  className="w-full py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Try Again
+                </button>
               </div>
             </div>
           )}
@@ -401,6 +450,17 @@ export default function ShortLinkGenerator() {
                   </button>
                 </div>
               </div>
+
+              {/* Create Another Link Button */}
+              <button
+                onClick={handleCreateAnother}
+                className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Another Link
+              </button>
             </div>
           )}
         </div>
