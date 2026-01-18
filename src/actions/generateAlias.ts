@@ -1,0 +1,103 @@
+"use server";
+import redis from "@/redis";
+import { tool } from "ai";
+import { generateText, stepCountIs } from "ai";
+import { openai } from "@ai-sdk/openai";
+import z from "zod";
+
+const checkAliasExistsInRedis = async ({ alias }: { alias: string }) => {
+  console.log("Check redis tool called");
+  const exists = await redis.exists(alias);
+  return exists === 1;
+};
+
+const checkAliasExistsInRedisTool = tool({
+  description:
+    "Checks if the generated alias already exists in the redis database. The funciton will return true if it already exists and false if the alias does not exist.",
+  inputSchema: z.object({
+    alias: z.string().describe("The alias to check if exists in the database"),
+  }),
+  strict: true,
+  execute: checkAliasExistsInRedis,
+});
+
+
+export async function generateAlias(prevState: { error: boolean, message: string | null }, formData: FormData) {
+  const theme = formData.get("theme") as string;
+
+  if (!theme) {
+    return { error: true, message: "Please enter a theme" };
+  }
+  let alias;
+  try {
+    const { text } = await generateText({
+      model: openai("gpt-5-nano"),
+      prompt: theme,
+      system: `
+            You are a creative and concise short link alias generator.
+            Task:
+            Given a user-provided theme, generate a short, memorable, and relevant alias suitable for use as a URL slug in the format shortLink/[alias].
+            This will be used to create a short link for a website, pointing to a user entered destination URL. 
+            
+            Rules:
+            - Output ONLY the alias string, without quotes, punctuation, or extra text.
+            - Use ONLY lowercase letters (a-z), and hyphens (-).
+            - No spaces, underscores, or special characters.
+            - Keep the alias concise, with a maximum length of 15 characters.
+            - The alias should clearly relate to the user's theme.
+            - Do not use the same output as the examples below.
+
+            Examples:
+            Input: "logitech"
+            Output: "g-pro-wireless"
+            Input: "league of legends"
+            Output: "summoners-rift"
+
+            After generating the Alias you should always check if the Alias already exists in the database by passing the alias to the tool called checkIfAliasExistsInRedis.
+            Make sure not to generate aliases you previously generated. 
+        `,
+      tools: { checkAliasExistsInRedisTool },
+      stopWhen: stepCountIs(5),
+    });
+    alias = text;
+  } catch (error) {
+    console.error("Failed to generate alias from theme", { error, theme });
+    return { error: true, message: "Failed to generate alias from theme" };
+  }
+
+  if (!alias) {
+    console.error("Failed to generate alias from theme", { theme });
+    return { error: true, message: "No alias generated from theme" };
+  }
+
+  return { error: false, message: alias, theme };
+}
+
+export async function createShortLink(prevState: { error: boolean, message: string | null }, formData: FormData) {
+  const alias = formData.get("alias") as string;
+  const destinationUrl = formData.get("destinationUrl") as string;
+
+  console.log("createShortLink called", alias, destinationUrl);
+
+  let exists = true;
+
+  try {
+    exists = await checkAliasExistsInRedis({ alias });
+  } catch (error) {
+    console.error("Failed to check if alias exists", error);
+    return { error: true, message: "Failed to create short link" };
+  }
+
+  if (exists) {
+    return { error: true, message: "Alias already exists" };
+  }
+
+  try {
+    await redis.set(alias, destinationUrl);
+  } catch (error) {
+    console.error("Failed to create short link", error);
+    return { error: true, message: "Failed to create short link" };
+  }
+
+  return { error: false, message: `localhost:3000/${alias}`, destinationUrl };
+}
