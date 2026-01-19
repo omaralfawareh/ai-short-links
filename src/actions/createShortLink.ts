@@ -29,5 +29,5 @@ export async function createShortLink(prevState: { error: boolean, message: stri
         return { error: true, message: "Failed to create short link" };
     }
 
-    return { error: false, message: `localhost:3000/${alias}`, destinationUrl };
+    return { error: false, message: `https://gotolnk.net/${alias}`, destinationUrl };
 }

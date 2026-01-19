@@ -200,8 +200,8 @@ export default function ShortLinkGenerator() {
                       </div>
                     </div>
                     <p className="text-sm sm:text-base md:text-lg font-mono font-semibold text-green-300 truncate">
-                      {typeof window !== "undefined" ? window.location.origin : ""}
-                      /<span className="text-white">{aliasState.message}</span>
+
+                      <span className="text-white">{aliasState.message}</span>
                     </p>
                   </div>
                 )}
@@ -324,9 +324,9 @@ export default function ShortLinkGenerator() {
                 {/* Live Preview */}
                 <div className="mt-3 px-3 sm:px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg mb-2 overflow-x-auto">
                   <p className="text-xs sm:text-sm text-slate-300 font-mono whitespace-nowrap">
-                    {"localhost:3000"}
+                    {"https://gotolnk.net/"}
                     <span className="text-white font-semibold">
-                      /{customPath || "my-path"}
+                      {customPath || "my-path"}
                     </span>
                   </p>
                 </div>
