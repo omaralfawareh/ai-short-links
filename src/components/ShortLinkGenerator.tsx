@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useActionState } from "react";
 import { generateAlias, createShortLink } from "../actions/generateAlias";
-import { useActionState } from "react";
 
 const DEFAULT_THEMES = [
   {
@@ -30,14 +29,38 @@ export default function ShortLinkGenerator() {
 
   const [aliasMode, setAliasMode] = useState<"theme" | "custom">("custom");
   const [customPath, setCustomPath] = useState("");
-  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const themeInputRef = useRef<HTMLInputElement>(null);
   const aiFormRef = useRef<HTMLFormElement>(null);
 
+  useEffect(() => {
+    if (aliasState.error && aliasState.message) {
+      // eslint-disable-next-line
+      setToastMessage(aliasState.message);
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  }, [aliasState]);
+
+  useEffect(() => {
+    if (linkState.error && linkState.message) {
+      // eslint-disable-next-line
+      setToastMessage(linkState.message);
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  }, [linkState]);
+
+  useEffect(() => {
+    if (aiLinkState.error && aiLinkState.message) {
+      // eslint-disable-next-line
+      setToastMessage(aiLinkState.message);
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  }, [aiLinkState]);
+
   const handleCopyLink = (text: string) => {
     navigator.clipboard.writeText(text);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2000);
+    setToastMessage("Copied to clipboard");
+    setTimeout(() => setToastMessage(null), 2000);
   };
 
   const handleThemeSuggestion = (theme: string) => {
@@ -48,17 +71,16 @@ export default function ShortLinkGenerator() {
   };
 
   const handleCreateAnother = () => {
-    // Reset the page to allow creating another link
     window.location.reload();
   };
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 sm:px-6">
       {/* Toast Notification */}
-      {showToast && (
+      {toastMessage && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-5 sm:right-auto z-50 animate-fade-in">
           <div className="bg-slate-900 text-white px-4 py-3 sm:px-6 rounded-lg shadow-lg border border-slate-700 flex items-center gap-2">
-            <span className="font-medium text-sm sm:text-base">Copied to clipboard</span>
+            <span className="font-medium text-sm sm:text-base">{toastMessage}</span>
           </div>
         </div>
       )}
@@ -71,7 +93,7 @@ export default function ShortLinkGenerator() {
       </p>
       <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
         <div className="p-4 sm:p-8 bg-slate-800">
-          {/* Destination URL Input - ALWAYS VISIBLE */}
+
           <div className="mb-6 p-3 sm:p-4 bg-slate-700 rounded-lg border border-slate-600 shadow-sm">
             <label
               htmlFor="destinationUrl"
@@ -91,7 +113,6 @@ export default function ShortLinkGenerator() {
             />
           </div>
 
-          {/* Theme-based Link Generation - Integrated Form */}
           {aliasMode === "theme" && (
             <div className="mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
@@ -112,7 +133,6 @@ export default function ShortLinkGenerator() {
                 action={formAction}
                 className="space-y-4"
               >
-                {/* Custom Theme Input */}
                 <div>
                   <label
                     htmlFor="customTheme"
@@ -167,7 +187,7 @@ export default function ShortLinkGenerator() {
                   </div>
                 </div>
 
-                {/* Generated Alias Display - Integrated within form */}
+                {/* Generated Alias */}
                 {!isPending && aliasState.message && !aliasState.error && (
                   <div className="p-3 sm:p-4 bg-linear-to-r from-green-900/20 to-emerald-900/20 border border-green-600 rounded-lg shadow-sm">
                     <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2">
@@ -182,29 +202,6 @@ export default function ShortLinkGenerator() {
                       {typeof window !== "undefined" ? window.location.origin : ""}
                       /<span className="text-white">{aliasState.message}</span>
                     </p>
-                  </div>
-                )}
-
-                {/* Error Display */}
-                {aliasState.error && aliasState.message && (
-                  <div className="space-y-3">
-                    <div className="p-4 bg-red-900/20 border border-red-600 rounded-lg">
-                      <div className="flex items-center gap-2 mb-3">
-                        <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        <p className="text-sm text-red-400">{aliasState.message}</p>
-                      </div>
-                      <button
-                        onClick={handleCreateAnother}
-                        className="w-full py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Try Again
-                      </button>
-                    </div>
                   </div>
                 )}
 
@@ -231,7 +228,7 @@ export default function ShortLinkGenerator() {
                 )}
               </form>
 
-              {aliasState.message && !aiLinkState.message && !aiLinkState.error && !aliasState.error && (
+              {aliasState.message && !aliasState.error && (!aiLinkState.message || aiLinkState.error) && (
                 <form id="aiForm" action={aiLinkAction} className="mt-6">
                   <input type="hidden" name="alias" value={aliasState.message} />
                   <button
@@ -254,30 +251,6 @@ export default function ShortLinkGenerator() {
                 </form>
               )}
 
-              {/* AI Link Generation Error Display */}
-              {aiLinkState.error && aiLinkState.message && (
-                <div className="space-y-3 mt-6">
-                  <div className="p-4 bg-red-900/20 border border-red-600 rounded-lg">
-                    <div className="flex items-center gap-2 mb-3">
-                      <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <p className="text-sm text-red-400">{aiLinkState.message}</p>
-                    </div>
-                    <button
-                      onClick={handleCreateAnother}
-                      className="w-full py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Try Again
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* AI Generated Short Link Display */}
               {aiLinkState.message && !aiLinkState.error && (
                 <div className="space-y-4 mt-6">
                   <div className="p-4 sm:p-5 bg-slate-700 border border-slate-600 rounded-lg shadow-md">
@@ -300,7 +273,6 @@ export default function ShortLinkGenerator() {
                     </div>
                   </div>
 
-                  {/* Create Another Link Button */}
                   <button
                     onClick={handleCreateAnother}
                     className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2"
@@ -315,10 +287,9 @@ export default function ShortLinkGenerator() {
             </div>
           )}
 
-          {/* Main Form - Only shown when ready to create link */}
+          {/* Custom Link */}
           {aliasMode === "custom" && (
             <form id="customForm" action={linkAction}>
-              {/* Custom Link Input */}
               <div className="mb-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-2">
                   <label
@@ -383,7 +354,7 @@ export default function ShortLinkGenerator() {
 
 
               {/* Create Short Link Button */}
-              {!linkState.message && !linkState.error && (
+              {(linkState?.error || !linkState?.message) && (
                 <button
                   type="submit"
                   disabled={isLinkPending}
@@ -403,29 +374,6 @@ export default function ShortLinkGenerator() {
                 </button>
               )}
             </form>
-          )}
-
-          {/* Custom Link Generation Error Display */}
-          {aliasMode === "custom" && linkState.error && linkState.message && (
-            <div className="space-y-3">
-              <div className="p-4 bg-red-900/20 border border-red-600 rounded-lg">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <p className="text-sm text-red-400">{linkState.message}</p>
-                </div>
-                <button
-                  onClick={handleCreateAnother}
-                  className="w-full py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Try Again
-                </button>
-              </div>
-            </div>
           )}
 
           {/* Generated Short Link Display */}
@@ -451,7 +399,7 @@ export default function ShortLinkGenerator() {
                 </div>
               </div>
 
-              {/* Create Another Link Button */}
+
               <button
                 onClick={handleCreateAnother}
                 className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2"
