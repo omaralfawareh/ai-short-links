@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useActionState } from "react";
-import { generateAlias, createShortLink } from "../actions/generateAlias";
+import { generateAlias } from "../actions/generateAlias";
+import { createShortLink } from "../actions/createShortLink";
 
 const DEFAULT_THEMES = [
   {
