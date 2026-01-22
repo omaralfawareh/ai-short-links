@@ -1,4 +1,5 @@
 "use server";
+
 import { tool } from "ai";
 import { generateText, stepCountIs } from "ai";
 import { openai } from "@ai-sdk/openai";
@@ -33,7 +34,6 @@ export async function generateAlias(prevState: { error: boolean, message: string
 
   const validation = await validateTurnstile(token, process.env.TURNSTILE_SECRET_KEY_THEME!);
 
-  console.log("validation", validation);
 
   if (validation.success) {
     // Token is valid 
@@ -44,8 +44,7 @@ export async function generateAlias(prevState: { error: boolean, message: string
     return { error: true, message: "Invalid verification" };
   }
 
-  console.log("generateAlias called", theme);
-  return { error: false, message: "tes22t2", theme };
+  // return { error: false, message: "tes22t2", theme };
 
 
   let alias;

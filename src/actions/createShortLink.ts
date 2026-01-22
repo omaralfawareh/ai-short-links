@@ -14,7 +14,6 @@ export async function createShortLink(prevState: { error: boolean, message: stri
     const secret = tokenCustom ? process.env.TURNSTILE_SECRET_KEY_CUSTOM! : process.env.TURNSTILE_SECRET_KEY_ALIAS!;
     const validation = await validateTurnstile(tokenAlias || tokenCustom, secret);
 
-    console.log("validation", validation);
 
     if (validation.success) {
         // Token is valid 
@@ -27,7 +26,7 @@ export async function createShortLink(prevState: { error: boolean, message: stri
 
     console.log("createShortLink called", alias, destinationUrl);
 
-    return { error: true, message: "test", alias, destinationUrl };
+    // return { error: true, message: "Error Test", alias, destinationUrl };
 
     let exists = true;
 

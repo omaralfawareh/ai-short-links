@@ -66,6 +66,13 @@ export default function ShortLinkGenerator() {
   }, [aiLinkState]);
 
   useEffect(() => {
+    if (linkState.message && customWidgetRef.current) {
+      console.log("resetting custom widget", customWidgetRef.current);
+      turnstile.reset(customWidgetRef.current);
+    }
+  }, [linkState]);
+
+  useEffect(() => {
     if (aliasState.error && aliasState.message) {
       // eslint-disable-next-line
       setToastMessage(aliasState);
@@ -279,7 +286,7 @@ export default function ShortLinkGenerator() {
                 )}
               </form>
 
-              {aliasState.message && !aliasState.error && !isPending && (aliasState.message !== aiLinkState.alias) && (
+              {aliasState.message && !aliasState.error && !isPending && (aliasState.message !== aiLinkState.alias || aiLinkState.error) && (
                 <form id="aiForm" action={aiLinkAction} className="mt-6">
                   <input type="hidden" name="alias" value={aliasState.message} />
                   <input type="hidden" name="cf-turnstile-response-alias" value={turnstileTokenAlias || ""} />
