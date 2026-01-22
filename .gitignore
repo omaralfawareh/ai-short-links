@@ -12,6 +12,7 @@
 
 # cloudflare
 .open-next/
+.wrangler/
 
 # testing
 /coverage
