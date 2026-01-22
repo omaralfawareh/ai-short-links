@@ -2,7 +2,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import checkAliasExistsInRedis from "@/utils/checkAliasExistsInRedis";
 
-
 export async function createShortLink(prevState: { error: boolean, message: string | null }, formData: FormData) {
     const kv = getCloudflareContext().env.SHORT_LINKS_KV;
 
@@ -56,7 +55,8 @@ export async function createShortLink(prevState: { error: boolean, message: stri
 }
 
 
-export async function validateTurnstile(token: string, secret: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function validateTurnstile(token: string, secret: string): Promise<any> {
     const formData = new FormData();
     formData.append('secret', secret);
     formData.append('response', token);
