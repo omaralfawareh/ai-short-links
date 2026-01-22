@@ -24,5 +24,12 @@
             "persist": true,
             "head_sampling_rate": 1
         }
-    }
+    },
+    "kv_namespaces": [
+        {
+            "binding": "SHORT_LINKS_KV",
+            "id": "18429ca7e70345e38a4cebd88daa23de",
+            "remote": true
+        }
+    ]
 }

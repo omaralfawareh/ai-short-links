@@ -1,9 +1,11 @@
 'use server'
-
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import checkAliasExistsInRedis from "@/utils/checkAliasExistsInRedis";
-import redis from "@/redis";
+
 
 export async function createShortLink(prevState: { error: boolean, message: string | null }, formData: FormData) {
+    const kv = getCloudflareContext().env.SHORT_LINKS_KV;
+
     const tokenAlias = formData.get("cf-turnstile-response-alias") as string;
     const tokenCustom = formData.get("cf-turnstile-response-custom") as string;
 
@@ -13,6 +15,8 @@ export async function createShortLink(prevState: { error: boolean, message: stri
 
     const secret = tokenCustom ? process.env.TURNSTILE_SECRET_KEY_CUSTOM! : process.env.TURNSTILE_SECRET_KEY_ALIAS!;
     const validation = await validateTurnstile(tokenAlias || tokenCustom, secret);
+
+    // return { error: false, message: "Test", alias, destinationUrl };
 
 
     if (validation.success) {
@@ -42,7 +46,7 @@ export async function createShortLink(prevState: { error: boolean, message: stri
     }
 
     try {
-        await redis.set(alias, destinationUrl);
+        await kv.put(alias, destinationUrl);
     } catch (error) {
         console.error("Failed to create short link", error);
         return { error: true, message: "Failed to create short link" };
