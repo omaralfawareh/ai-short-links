@@ -6,7 +6,7 @@ const TurnstileWidget = ({ container, widgetRef, ...rest }:
     const hasRendered = useRef(false);
 
     useEffect(() => {
-        if (!hasRendered.current) {
+        if (!hasRendered.current && turnstile) {
 
             widgetRef.current = turnstile.render(`#${container}`, {
                 size: "flexible",
