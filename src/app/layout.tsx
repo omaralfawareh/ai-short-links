@@ -26,10 +26,10 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://challenges.cloudflare.com" />
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-          defer
-        ></script>
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

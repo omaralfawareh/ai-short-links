@@ -6,14 +6,15 @@ const TurnstileWidget = ({ container, widgetRef, ...rest }:
     const hasRendered = useRef(false);
 
     useEffect(() => {
-        if (!hasRendered.current && turnstile) {
+        if (!hasRendered.current && !!turnstile) {
 
-            widgetRef.current = turnstile.render(`#${container}`, {
-                size: "flexible",
-                theme: "dark",
-                ...rest,
-            }) || ""
-            console.log("widgetId", widgetRef.current);
+            turnstile.ready(() => {
+                widgetRef.current = turnstile.render(`#${container}`, {
+                    size: "flexible",
+                    theme: "dark",
+                    ...rest,
+                }) || "";
+            });
         }
 
 
