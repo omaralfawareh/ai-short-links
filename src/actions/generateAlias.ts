@@ -4,6 +4,7 @@ import { generateText, stepCountIs } from "ai";
 import { openai } from "@ai-sdk/openai";
 import checkAliasExistsInRedis from "@/utils/checkAliasExistsInRedis";
 import z from "zod";
+import { validateTurnstile } from "./createShortLink";
 
 
 const checkAliasExistsInRedisTool = tool({
@@ -19,10 +20,34 @@ const checkAliasExistsInRedisTool = tool({
 
 export async function generateAlias(prevState: { error: boolean, message: string | null }, formData: FormData) {
   const theme = formData.get("theme") as string;
+  const token = formData.get("cf-turnstile-response-ai") as string;
+
 
   if (!theme) {
     return { error: true, message: "Please enter a theme" };
   }
+
+  if (!token) {
+    return { error: true, message: "Please verify you are not a robot" };
+  }
+
+  const validation = await validateTurnstile(token, process.env.TURNSTILE_SECRET_KEY_THEME!);
+
+  console.log("validation", validation);
+
+  if (validation.success) {
+    // Token is valid 
+    console.log('Valid submission from:', validation.hostname);
+  } else {
+    // Token is invalid 
+    console.log('Invalid token:', validation['error-codes']);
+    return { error: true, message: "Invalid verification" };
+  }
+
+  console.log("generateAlias called", theme);
+  return { error: false, message: "tes22t2", theme };
+
+
   let alias;
   try {
     const { text } = await generateText({
