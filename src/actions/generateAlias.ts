@@ -50,7 +50,7 @@ export async function generateAlias(prevState: { error: boolean, message: string
   let alias;
   try {
     const { text } = await generateText({
-      model: openai("gpt-5-nano"),
+      model: openai("gpt-4o-mini"),
       prompt: theme,
       system: `
             You are a creative and concise short link alias generator.
