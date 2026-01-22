@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
+# cloudflare
+.open-next/
+
 # testing
 /coverage
 
