@@ -14,7 +14,39 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AI Short Link Generator",
-  description: "Create custom short links with AI-powered generation",
+  description: "Create free custom short links with AI-powered generation",
+  keywords: ["short link", "short links", "url shortener", "ai", "link generator", "custom links", "free short links", "tiny links"],
+  authors: [{ name: "Omar Alfawareh", url: "https://omaraalfawareh.com" }],
+  creator: "Omar Alfawareh",
+  applicationName: "AI Short Links",
+  manifest: "/site.webmanifest",
+  themeColor: "#0f172a",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+  },
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    title: "AI Short Link Generator",
+    description: "Create custom short links with AI-powered generation",
+    siteName: "AI Short Links",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Short Link Generator",
+    description: "Create custom short links with AI-powered generation",
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +62,7 @@ export default function RootLayout({
         <script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         />
+
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
