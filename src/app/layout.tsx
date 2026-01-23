@@ -47,6 +47,7 @@ export const metadata: Metadata = {
     title: "AI Short Link Generator",
     description: "Create custom short links with AI-powered generation",
   },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
