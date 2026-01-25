@@ -20,11 +20,6 @@ export const metadata: Metadata = {
   creator: "Omar Alfawareh",
   applicationName: "AI Short Links",
   manifest: "/site.webmanifest",
-  themeColor: "#0f172a",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-  },
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
