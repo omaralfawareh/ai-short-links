@@ -58,7 +58,8 @@ export default function RootLayout({
         <script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         />
-
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5350545345275925"
+          crossOrigin="anonymous" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
