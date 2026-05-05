@@ -44,7 +44,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="w-full py-8 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
             <div>
               <h3 className="text-sm font-semibold text-white mb-3">Product</h3>
               <ul className="space-y-2">
@@ -107,19 +107,6 @@ export default function Home() {
                   >
                     Terms of Service
                   </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-white mb-3">Connect</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="mailto:contact@aishort.link"
-                    className="text-sm text-slate-400 hover:text-white transition-colors"
-                  >
-                    Contact
-                  </a>
                 </li>
               </ul>
             </div>
