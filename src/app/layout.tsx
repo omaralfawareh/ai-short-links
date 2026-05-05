@@ -51,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="bg-background">
       <head>
         <link rel="preconnect" href="https://challenges.cloudflare.com" />
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}

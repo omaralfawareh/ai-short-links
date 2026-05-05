@@ -48,105 +48,114 @@ const articles = [
 
 export default function Blog() {
   return (
-    <div
-      className="min-h-screen bg-slate-900 py-12 px-4 sm:px-6 lg:px-8"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px)",
-        backgroundSize: "24px 24px",
-      }}
-    >
-      <main className="max-w-4xl mx-auto">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background gradient orbs */}
+      <div
+        className="gradient-orb w-[500px] h-[500px] -top-40 -right-40 fixed pointer-events-none"
+        style={{ background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }}
+      />
+      <div
+        className="gradient-orb w-[300px] h-[300px] bottom-20 -left-20 fixed pointer-events-none"
+        style={{ background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)", animationDelay: "-4s" }}
+      />
+
+      <div className="py-12 px-4 sm:px-6 lg:px-8 relative z-10">
+        <main className="max-w-4xl mx-auto">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-muted hover:text-foreground mb-8 transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back to Home
-        </Link>
-
-        <header className="mb-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Blog
-          </h1>
-          <p className="text-lg text-slate-400 max-w-2xl">
-            Tips, guides, and insights about URL shortening, link management,
-            and making your links more memorable with AI.
-          </p>
-        </header>
-
-        <div className="grid gap-6">
-          {articles.map((article) => (
-            <Link
-              key={article.slug}
-              href={`/blog/${article.slug}`}
-              className="group bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 hover:bg-slate-800/70 transition-all"
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-xs font-medium text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full">
-                      {article.category}
-                    </span>
-                    <span className="text-sm text-slate-500">
-                      {article.date}
-                    </span>
-                    <span className="text-sm text-slate-500">
-                      {article.readTime}
-                    </span>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Back to Home
+          </Link>
+
+          <header className="mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 glass rounded-full mb-4">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
+              <span className="text-sm text-muted">Resources</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              Blog
+            </h1>
+            <p className="text-lg text-muted max-w-2xl">
+              Tips, guides, and insights about URL shortening, link management,
+              and making your links more memorable with AI.
+            </p>
+          </header>
+
+          <div className="grid gap-6">
+            {articles.map((article) => (
+              <Link
+                key={article.slug}
+                href={`/blog/${article.slug}`}
+                className="group glass-card rounded-xl p-6 hover:bg-white/[0.06] transition-all"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                        {article.category}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {article.date}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {article.readTime}
+                      </span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors mb-2">
+                      {article.title}
+                    </h2>
+                    <p className="text-muted">{article.description}</p>
                   </div>
-                  <h2 className="text-xl font-semibold text-white group-hover:text-blue-400 transition-colors mb-2">
-                    {article.title}
-                  </h2>
-                  <p className="text-slate-400">{article.description}</p>
+                  <svg
+                    className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0 mt-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
                 </div>
-                <svg
-                  className="w-5 h-5 text-slate-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all flex-shrink-0 mt-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <footer className="mt-12 text-center">
-          <div className="flex justify-center gap-6 text-sm text-slate-400">
-            <Link
-              href="/privacy"
-              className="hover:text-white transition-colors"
-            >
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-white transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/about" className="hover:text-white transition-colors">
-              About
-            </Link>
+              </Link>
+            ))}
           </div>
-        </footer>
-      </main>
+
+          <footer className="mt-12 text-center">
+            <div className="flex justify-center gap-6 text-sm text-muted">
+              <Link
+                href="/privacy"
+                className="hover:text-foreground transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors">
+                Terms of Service
+              </Link>
+              <Link href="/about" className="hover:text-foreground transition-colors">
+                About
+              </Link>
+            </div>
+          </footer>
+        </main>
+      </div>
     </div>
   );
 }

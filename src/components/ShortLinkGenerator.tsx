@@ -114,43 +114,44 @@ export default function ShortLinkGenerator() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6">
+    <div className="w-full max-w-2xl mx-auto">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-5 sm:right-auto z-50 animate-fade-in">
-          <div className={`px-4 py-3 sm:px-6 rounded-lg shadow-lg border flex items-center gap-2 ${toastMessage.error
-            ? "bg-red-900/90 text-white border-red-600"
-            : "bg-green-900/90 text-white border-green-600"
+          <div className={`glass px-4 py-3 sm:px-6 rounded-xl shadow-lg flex items-center gap-2 ${toastMessage.error
+            ? "border-red-500/50 bg-red-500/10"
+            : "border-emerald-500/50 bg-emerald-500/10"
             }`}>
             {toastMessage.error ? (
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             )}
-            <span className="font-medium text-sm sm:text-base">{toastMessage.message}</span>
+            <span className={`font-medium text-sm sm:text-base ${toastMessage.error ? "text-red-200" : "text-emerald-200"}`}>
+              {toastMessage.message}
+            </span>
           </div>
         </div>
       )}
 
-      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 text-center">
-        Short Link Generator
-      </h1>
-      <p className="text-slate-400 mb-6 sm:mb-8 text-center text-sm sm:text-base">
-        Create custom short links with AI-powered generation
-      </p>
-      <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
-        <div className="p-4 sm:p-8 bg-slate-800">
+      {/* Main Card */}
+      <div className="glass-card rounded-2xl shadow-2xl overflow-hidden glow-primary">
+        <div className="p-5 sm:p-8">
 
-          <div className="mb-6 p-3 sm:p-4 bg-slate-700 rounded-lg border border-slate-600 shadow-sm">
+          {/* Destination URL Input */}
+          <div className="mb-6 p-4 sm:p-5 glass rounded-xl">
             <label
               htmlFor="destinationUrl"
-              className="block text-sm font-semibold text-slate-200 mb-2"
+              className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3"
             >
-              🔗 Destination URL
+              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              Destination URL
             </label>
             <input
               type="url"
@@ -160,22 +161,25 @@ export default function ShortLinkGenerator() {
               required
               defaultValue={linkState.destinationUrl || aiLinkState.destinationUrl}
               placeholder="https://example.com"
-              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 text-sm sm:text-base"
+              className="w-full px-4 py-3 glass-input rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition text-foreground placeholder-muted text-sm sm:text-base"
             />
           </div>
 
           {aliasMode === "theme" && (
             <div className="mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                <span className="block text-sm font-medium text-slate-200">
-                  ✨ AI Link Generator
+                <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  AI Link Generator
                 </span>
                 <button
                   type="button"
                   onClick={() => setAliasMode("custom")}
-                  className="text-sm text-slate-400 hover:text-slate-200 font-medium transition text-left sm:text-right cursor-pointer"
+                  className="text-sm text-muted hover:text-foreground font-medium transition text-left sm:text-right cursor-pointer"
                 >
-                  ← Use Custom Name
+                  Use Custom Name
                 </button>
               </div>
 
@@ -190,7 +194,7 @@ export default function ShortLinkGenerator() {
                 <div>
                   <label
                     htmlFor="customTheme"
-                    className="block text-sm font-medium text-slate-200 mb-2"
+                    className="block text-sm font-medium text-muted mb-2"
                   >
                     Describe the theme of your link
                   </label>
@@ -203,14 +207,14 @@ export default function ShortLinkGenerator() {
                       name="theme"
                       required
                       placeholder="e.g., ocean waves, vintage retro..."
-                      className="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 shadow-sm text-sm sm:text-base"
+                      className="flex-1 px-4 py-3 glass-input rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition text-foreground placeholder-muted text-sm sm:text-base"
                       disabled={isPending}
                     />
                     <button
                       type="submit"
                       disabled={isPending || !turnstileTokenTheme}
                       onClick={() => setShowAliasResult(false)}
-                      className="px-6 py-2.5 bg-white text-slate-900 rounded-lg font-medium hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md whitespace-nowrap"
+                      className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg whitespace-nowrap"
                     >
                       {isPending ? (
                         <span className="flex items-center gap-2">
@@ -247,7 +251,7 @@ export default function ShortLinkGenerator() {
                 {/* Theme Suggestions */}
                 {(
                   <div>
-                    <p className="text-xs font-medium text-slate-400 mb-2">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
                       Or try a suggestion:
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -257,7 +261,7 @@ export default function ShortLinkGenerator() {
                           type="button"
                           onClick={() => handleThemeSuggestion(theme.label)}
                           disabled={isPending || !turnstileTokenTheme}
-                          className="px-3 py-1.5 text-sm rounded-full border border-slate-500 bg-slate-600 text-slate-200 hover:border-white hover:bg-slate-500 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm capitalize"
+                          className="px-3 py-1.5 text-sm rounded-full glass-button text-muted hover:text-foreground hover:bg-white/15 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer capitalize"
                         >
                           {theme.label}
                         </button>
@@ -269,18 +273,17 @@ export default function ShortLinkGenerator() {
 
                 {/* Generated Alias */}
                 {!isPending && aliasState.message && !aliasState.error && (
-                  <div className="p-3 sm:p-4 bg-linear-to-r from-green-900/20 to-emerald-900/20 border border-green-600 rounded-lg shadow-sm">
+                  <div className="p-4 glass rounded-xl border-emerald-500/30 bg-emerald-500/10">
                     <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2">
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-xs sm:text-sm font-medium text-green-300">Generated Successfully</span>
+                        <span className="text-xs sm:text-sm font-medium text-emerald-300">Generated Successfully</span>
                       </div>
                     </div>
-                    <p className="text-sm sm:text-base md:text-lg font-mono font-semibold text-green-300 truncate">
-
-                      <span className="text-white">{aliasState.message}</span>
+                    <p className="text-sm sm:text-base md:text-lg font-mono font-semibold text-foreground truncate">
+                      {aliasState.message}
                     </p>
                   </div>
                 )}
@@ -296,7 +299,7 @@ export default function ShortLinkGenerator() {
                     type="submit"
                     disabled={!turnstileTokenAlias}
                     onClick={() => setShowAliasResult(true)}
-                    className="flex items-center justify-center w-full py-3 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg"
+                    className="flex items-center justify-center w-full py-3.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg"
                   >
                     {aiIsLinkPending ? (
                       <span className="flex items-center gap-2">
@@ -304,10 +307,10 @@ export default function ShortLinkGenerator() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Generating
+                        Creating Link
                       </span>
                     ) : (
-                      <span>Generate Short Link</span>
+                      <span>Create Short Link</span>
                     )}
                   </button>
                 </form>
@@ -315,8 +318,8 @@ export default function ShortLinkGenerator() {
 
               {showAliasResult && aiLinkState.message && !aiLinkState.error && (
                 <div className="space-y-4 mt-6">
-                  <div className="p-4 sm:p-5 bg-slate-700 border border-slate-600 rounded-lg shadow-md">
-                    <p className="text-sm font-medium text-slate-200 mb-3">
+                  <div className="p-4 sm:p-5 glass rounded-xl">
+                    <p className="text-sm font-medium text-muted mb-3">
                       Your Short Link
                     </p>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
@@ -324,11 +327,11 @@ export default function ShortLinkGenerator() {
                         type="text"
                         value={aiLinkState.message}
                         readOnly
-                        className="flex-1 px-3 sm:px-4 py-2.5 bg-white border border-slate-300 rounded-lg font-mono text-slate-900 shadow-sm text-sm sm:text-base truncate"
+                        className="flex-1 px-4 py-3 glass-input rounded-xl font-mono text-foreground text-sm sm:text-base truncate"
                       />
                       <button
                         onClick={() => handleCopyLink(aiLinkState.message)}
-                        className="px-4 sm:px-5 py-2.5 bg-white text-slate-900 rounded-lg font-medium hover:bg-gray-100 transition shadow-md whitespace-nowrap cursor-pointer"
+                        className="px-5 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium transition shadow-md whitespace-nowrap cursor-pointer"
                       >
                         Copy
                       </button>
@@ -337,7 +340,7 @@ export default function ShortLinkGenerator() {
 
                   <button
                     onClick={handleCreateAnother}
-                    className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 glass-button hover:bg-white/15 text-foreground rounded-xl font-semibold transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -353,17 +356,17 @@ export default function ShortLinkGenerator() {
           {aliasMode === "custom" && (
             <form id="customForm" action={linkAction}>
               <div className="mb-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
                   <label
                     htmlFor="alias"
-                    className="block text-sm font-medium text-slate-200"
+                    className="block text-sm font-medium text-foreground"
                   >
                     Link Preview
                   </label>
                   <button
                     type="button"
                     onClick={() => setAliasMode("theme")}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-lg font-semibold transition shadow-lg text-xs sm:text-sm cursor-pointer"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white rounded-xl font-semibold transition shadow-lg text-xs sm:text-sm cursor-pointer"
                   >
                     <svg
                       className="w-4 h-4 sm:w-5 sm:h-5 shrink-0"
@@ -383,10 +386,10 @@ export default function ShortLinkGenerator() {
                 </div>
 
                 {/* Live Preview */}
-                <div className="mt-3 px-3 sm:px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg mb-2 overflow-x-auto">
-                  <p className="text-xs sm:text-sm text-slate-300 font-mono whitespace-nowrap">
+                <div className="mt-3 px-4 py-3 glass rounded-xl mb-3 overflow-x-auto">
+                  <p className="text-xs sm:text-sm text-muted font-mono whitespace-nowrap">
                     {"https://gotolnk.net/"}
-                    <span className="text-white font-semibold">
+                    <span className="text-foreground font-semibold">
                       {customPath || "my-path"}
                     </span>
                   </p>
@@ -407,9 +410,9 @@ export default function ShortLinkGenerator() {
                       .replace(/[^a-z0-9-]/g, "");
                     setCustomPath(sanitized);
                   }}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 font-mono shadow-sm text-sm sm:text-base"
+                  className="w-full px-4 py-3 glass-input rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition text-foreground placeholder-muted font-mono text-sm sm:text-base"
                 />
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   Only lowercase letters, numbers, and hyphens allowed
                 </p>
               </div>
@@ -424,7 +427,7 @@ export default function ShortLinkGenerator() {
                   <button
                     type="submit"
                     disabled={isLinkPending}
-                    className="flex items-center justify-center w-full py-3 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg"
+                    className="flex items-center justify-center w-full py-3.5 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg"
                   >
                     {isLinkPending ? (
                       <span className="flex items-center gap-2">
@@ -432,10 +435,10 @@ export default function ShortLinkGenerator() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Generating
+                        Creating Link
                       </span>
                     ) : (
-                      <span>Generate Short Link</span>
+                      <span>Create Short Link</span>
                     )}
                   </button>
                 </>
@@ -447,8 +450,8 @@ export default function ShortLinkGenerator() {
           {/* Generated Short Link Display */}
           {aliasMode === "custom" && linkState.message && !linkState.error && (
             <div className="space-y-4">
-              <div className="p-4 sm:p-5 bg-slate-700 border border-slate-600 rounded-lg shadow-md">
-                <p className="text-sm font-medium text-slate-200 mb-3">
+              <div className="p-4 sm:p-5 glass rounded-xl">
+                <p className="text-sm font-medium text-muted mb-3">
                   Your Short Link
                 </p>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
@@ -456,11 +459,11 @@ export default function ShortLinkGenerator() {
                     type="text"
                     value={linkState.message}
                     readOnly
-                    className="flex-1 px-3 sm:px-4 py-2.5 bg-white border border-slate-300 rounded-lg font-mono text-slate-900 shadow-sm text-sm sm:text-base truncate"
+                    className="flex-1 px-4 py-3 glass-input rounded-xl font-mono text-foreground text-sm sm:text-base truncate"
                   />
                   <button
                     onClick={() => handleCopyLink(linkState.message)}
-                    className="px-4 sm:px-5 py-2.5 bg-white text-slate-900 rounded-lg font-medium hover:bg-gray-100 transition shadow-md whitespace-nowrap cursor-pointer"
+                    className="px-5 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium transition shadow-md whitespace-nowrap cursor-pointer"
                   >
                     Copy
                   </button>
@@ -470,7 +473,7 @@ export default function ShortLinkGenerator() {
 
               <button
                 onClick={handleCreateAnother}
-                className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3.5 glass-button hover:bg-white/15 text-foreground rounded-xl font-semibold transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
