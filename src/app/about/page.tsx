@@ -9,35 +9,8 @@ export const metadata: Metadata = {
 
 export default function About() {
   return (
-    <div
-      className="min-h-screen bg-slate-900 py-12 px-4 sm:px-6 lg:px-8"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px)",
-        backgroundSize: "24px 24px",
-      }}
-    >
+    <div className="px-4 py-12 sm:px-6 lg:px-8 lg:pb-20">
       <main className="max-w-3xl mx-auto">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back to Home
-        </Link>
-
         <article className="bg-slate-800/50 rounded-2xl p-8 sm:p-12 border border-slate-700/50">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-6">
             About AI Short Links
@@ -238,23 +211,6 @@ export default function About() {
             </section>
           </div>
         </article>
-
-        <footer className="mt-8 text-center">
-          <div className="flex justify-center gap-6 text-sm text-slate-400">
-            <Link
-              href="/privacy"
-              className="hover:text-white transition-colors"
-            >
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-white transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/blog" className="hover:text-white transition-colors">
-              Blog
-            </Link>
-          </div>
-        </footer>
       </main>
     </div>
   );
