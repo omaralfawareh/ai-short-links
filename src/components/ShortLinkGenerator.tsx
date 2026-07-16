@@ -24,22 +24,39 @@ const DEFAULT_THEMES = [
   },
 ];
 
-
-
 export default function ShortLinkGenerator() {
   // Actions
-  const [aliasState, formAction, isPending] = useActionState(generateAlias, { error: false, message: "" });
-  const [linkState, linkAction, isLinkPending] = useActionState(createShortLink, { error: false, message: "" });
-  const [aiLinkState, aiLinkAction, aiIsLinkPending] = useActionState(createShortLink, { error: false, message: "" });
+  const [aliasState, formAction, isPending] = useActionState(generateAlias, {
+    error: false,
+    message: "",
+  });
+  const [linkState, linkAction, isLinkPending] = useActionState(
+    createShortLink,
+    { error: false, message: "" },
+  );
+  const [aiLinkState, aiLinkAction, aiIsLinkPending] = useActionState(
+    createShortLink,
+    { error: false, message: "" },
+  );
   // States
   const [aliasMode, setAliasMode] = useState<"theme" | "custom">("custom");
   const [customPath, setCustomPath] = useState("");
-  const [toastMessage, setToastMessage] = useState<{ error: boolean; message: string } | null>(null);
+  const [aliasExistsError, setAliasExistsError] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{
+    error: boolean;
+    message: string;
+  } | null>(null);
   const [showAliasResult, setShowAliasResult] = useState<boolean>(false);
   // Turnstile tokens
-  const [turnstileTokenTheme, setTurnstileTokenTheme] = useState<string | null>(null);
-  const [turnstileTokenAlias, setTurnstileTokenAlias] = useState<string | null>(null);
-  const [turnstileTokenCustom, setTurnstileTokenCustom] = useState<string | null>(null);
+  const [turnstileTokenTheme, setTurnstileTokenTheme] = useState<string | null>(
+    null,
+  );
+  const [turnstileTokenAlias, setTurnstileTokenAlias] = useState<string | null>(
+    null,
+  );
+  const [turnstileTokenCustom, setTurnstileTokenCustom] = useState<
+    string | null
+  >(null);
   // Turnstile Widget Refs
   const themeWidgetRef = useRef<string | null>(null);
   const aliasWidgetRef = useRef<string | null>(null);
@@ -47,8 +64,6 @@ export default function ShortLinkGenerator() {
   // Refs
   const themeInputRef = useRef<HTMLInputElement>(null);
   const aiFormRef = useRef<HTMLFormElement>(null);
-
-
 
   useEffect(() => {
     // Reset token if success or error
@@ -85,6 +100,7 @@ export default function ShortLinkGenerator() {
       // eslint-disable-next-line
       setToastMessage(linkState);
       setTimeout(() => setToastMessage(null), 3000);
+      setAliasExistsError(linkState.message === "Alias already exists");
     }
   }, [linkState]);
 
@@ -114,37 +130,61 @@ export default function ShortLinkGenerator() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6">
+    <div className="w-full max-w-2xl mx-auto">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-5 sm:right-auto z-50 animate-fade-in">
-          <div className={`px-4 py-3 sm:px-6 rounded-lg shadow-lg border flex items-center gap-2 ${toastMessage.error
-            ? "bg-red-900/90 text-white border-red-600"
-            : "bg-green-900/90 text-white border-green-600"
-            }`}>
+          <div
+            className={`px-4 py-3 sm:px-6 rounded-lg shadow-lg border flex items-center gap-2 ${
+              toastMessage.error
+                ? "bg-red-900/90 text-white border-red-600"
+                : "bg-green-900/90 text-white border-green-600"
+            }`}
+          >
             {toastMessage.error ? (
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             ) : (
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-5 h-5 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             )}
-            <span className="font-medium text-sm sm:text-base">{toastMessage.message}</span>
+            <span className="font-medium text-sm sm:text-base">
+              {toastMessage.message}
+            </span>
           </div>
         </div>
       )}
 
-      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 text-center">
+      <h1 className="px-2 text-2xl sm:text-3xl font-bold text-white mb-2 text-center">
         Short Link Generator
       </h1>
-      <p className="text-slate-400 mb-6 sm:mb-8 text-center text-sm sm:text-base">
+      <p className="px-2 text-slate-400 mb-6 sm:mb-8 text-center text-sm sm:text-base">
         Create custom short links with AI-powered generation
       </p>
       <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
-        <div className="p-4 sm:p-8 bg-slate-800">
-
+        <div className="p-3 sm:p-8 bg-slate-800">
           <div className="mb-6 p-3 sm:p-4 bg-slate-700 rounded-lg border border-slate-600 shadow-sm">
             <label
               htmlFor="destinationUrl"
@@ -158,9 +198,11 @@ export default function ShortLinkGenerator() {
               form={aliasMode === "custom" ? "customForm" : "aiForm"}
               name="destinationUrl"
               required
-              defaultValue={linkState.destinationUrl || aiLinkState.destinationUrl}
+              defaultValue={
+                linkState.destinationUrl || aiLinkState.destinationUrl
+              }
               placeholder="https://example.com"
-              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 text-sm sm:text-base"
+              className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 text-base"
             />
           </div>
 
@@ -179,13 +221,18 @@ export default function ShortLinkGenerator() {
                 </button>
               </div>
 
-              <form
-                ref={aiFormRef}
-                action={formAction}
-                className="space-y-4"
-              >
-                <input type="hidden" name="cf-turnstile-response-ai" value={turnstileTokenTheme || ""} />
-                <TurnstileWidget sitekey="0x4AAAAAACN75NwiWj2-Vvcv" widgetRef={themeWidgetRef} callback={(token) => setTurnstileTokenTheme(token)} container="turnstile-container-ai" />
+              <form ref={aiFormRef} action={formAction} className="space-y-4">
+                <input
+                  type="hidden"
+                  name="cf-turnstile-response-ai"
+                  value={turnstileTokenTheme || ""}
+                />
+                <TurnstileWidget
+                  sitekey="0x4AAAAAACN75NwiWj2-Vvcv"
+                  widgetRef={themeWidgetRef}
+                  callback={(token) => setTurnstileTokenTheme(token)}
+                  container="turnstile-container-ai"
+                />
 
                 <div>
                   <label
@@ -203,14 +250,14 @@ export default function ShortLinkGenerator() {
                       name="theme"
                       required
                       placeholder="e.g., ocean waves, vintage retro..."
-                      className="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 shadow-sm text-sm sm:text-base"
+                      className="flex-1 px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 shadow-sm text-base"
                       disabled={isPending}
                     />
                     <button
                       type="submit"
                       disabled={isPending || !turnstileTokenTheme}
                       onClick={() => setShowAliasResult(false)}
-                      className="px-6 py-2.5 bg-white text-slate-900 rounded-lg font-medium hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md whitespace-nowrap"
+                      className="px-6 py-3 bg-white text-slate-900 rounded-lg font-medium hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md whitespace-nowrap"
                     >
                       {isPending ? (
                         <span className="flex items-center gap-2">
@@ -242,10 +289,8 @@ export default function ShortLinkGenerator() {
                   </div>
                 </div>
 
-
-
                 {/* Theme Suggestions */}
-                {(
+                {
                   <div>
                     <p className="text-xs font-medium text-slate-400 mb-2">
                       Or try a suggestion:
@@ -264,54 +309,96 @@ export default function ShortLinkGenerator() {
                       ))}
                     </div>
                   </div>
-                )}
-
+                }
 
                 {/* Generated Alias */}
                 {!isPending && aliasState.message && !aliasState.error && (
                   <div className="p-3 sm:p-4 bg-linear-to-r from-green-900/20 to-emerald-900/20 border border-green-600 rounded-lg shadow-sm">
                     <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2">
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <svg
+                          className="w-4 h-4 sm:w-5 sm:h-5 text-green-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
-                        <span className="text-xs sm:text-sm font-medium text-green-300">Generated Successfully</span>
+                        <span className="text-xs sm:text-sm font-medium text-green-300">
+                          Generated Successfully
+                        </span>
                       </div>
                     </div>
                     <p className="text-sm sm:text-base md:text-lg font-mono font-semibold text-green-300 truncate">
-
                       <span className="text-white">{aliasState.message}</span>
                     </p>
                   </div>
                 )}
               </form>
 
-              {aliasState.message && !aliasState.error && !isPending && (aliasState.message !== aiLinkState.alias || aiLinkState.error) && (
-                <form id="aiForm" action={aiLinkAction} className="mt-6">
-                  <input type="hidden" name="alias" value={aliasState.message} />
-                  <input type="hidden" name="cf-turnstile-response-alias" value={turnstileTokenAlias || ""} />
-                  <TurnstileWidget widgetRef={aliasWidgetRef} sitekey="0x4AAAAAACNvMyjAn5o7TUUA" callback={(token) => setTurnstileTokenAlias(token)} container="turnstile-container-alias" />
+              {aliasState.message &&
+                !aliasState.error &&
+                !isPending &&
+                (aliasState.message !== aiLinkState.alias ||
+                  aiLinkState.error) && (
+                  <form id="aiForm" action={aiLinkAction} className="mt-6">
+                    <input
+                      type="hidden"
+                      name="alias"
+                      value={aliasState.message}
+                    />
+                    <input
+                      type="hidden"
+                      name="cf-turnstile-response-alias"
+                      value={turnstileTokenAlias || ""}
+                    />
+                    <TurnstileWidget
+                      widgetRef={aliasWidgetRef}
+                      sitekey="0x4AAAAAACNvMyjAn5o7TUUA"
+                      callback={(token) => setTurnstileTokenAlias(token)}
+                      container="turnstile-container-alias"
+                    />
 
-                  <button
-                    type="submit"
-                    disabled={!turnstileTokenAlias}
-                    onClick={() => setShowAliasResult(true)}
-                    className="flex items-center justify-center w-full py-3 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg"
-                  >
-                    {aiIsLinkPending ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Generating
-                      </span>
-                    ) : (
-                      <span>Generate Short Link</span>
-                    )}
-                  </button>
-                </form>
-              )}
+                    <button
+                      type="submit"
+                      disabled={!turnstileTokenAlias}
+                      onClick={() => setShowAliasResult(true)}
+                      className="flex items-center justify-center w-full py-3 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg"
+                    >
+                      {aiIsLinkPending ? (
+                        <span className="flex items-center gap-2">
+                          <svg
+                            className="animate-spin h-5 w-5"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          Generating
+                        </span>
+                      ) : (
+                        <span>Generate Short Link</span>
+                      )}
+                    </button>
+                  </form>
+                )}
 
               {showAliasResult && aiLinkState.message && !aiLinkState.error && (
                 <div className="space-y-4 mt-6">
@@ -339,8 +426,18 @@ export default function ShortLinkGenerator() {
                     onClick={handleCreateAnother}
                     className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
                     </svg>
                     Create Another Link
                   </button>
@@ -400,26 +497,48 @@ export default function ShortLinkGenerator() {
                   pattern="[a-z0-9-]+"
                   placeholder="my-path"
                   value={customPath}
-                  disabled={!!linkState?.message && !linkState?.error || isLinkPending}
+                  disabled={
+                    (!!linkState?.message && !linkState?.error) || isLinkPending
+                  }
                   onChange={(e) => {
                     const sanitized = e.target.value
                       .toLowerCase()
                       .replace(/[^a-z0-9-]/g, "");
                     setCustomPath(sanitized);
+                    setAliasExistsError(false);
                   }}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 font-mono shadow-sm text-sm sm:text-base"
+                  aria-invalid={aliasExistsError}
+                  className={`w-full px-4 py-3 bg-white rounded-lg outline-none transition text-slate-900 placeholder-gray-400 font-mono shadow-sm text-base ${
+                    aliasExistsError
+                      ? "border-2 border-red-500 focus:ring-2 focus:ring-red-400 focus:border-red-500"
+                      : "border border-slate-300 focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  }`}
                 />
-                <p className="text-xs text-slate-400 mt-2">
-                  Only lowercase letters, numbers, and hyphens allowed
-                </p>
+                {aliasExistsError ? (
+                  <p className="text-xs text-red-400 mt-2">
+                    This alias is already taken. Please choose another.
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-400 mt-2">
+                    Only lowercase letters, numbers, and hyphens allowed
+                  </p>
+                )}
               </div>
-
 
               {/* Create Short Link Button */}
               {(linkState?.error || !linkState?.message) && (
                 <>
-                  <TurnstileWidget widgetRef={customWidgetRef} sitekey="0x4AAAAAACNuothYpEfUeJG7" callback={(token) => setTurnstileTokenCustom(token)} container="turnstile-container-alias" />
-                  <input type="hidden" name="cf-turnstile-response-custom" value={turnstileTokenCustom || ""} />
+                  <TurnstileWidget
+                    widgetRef={customWidgetRef}
+                    sitekey="0x4AAAAAACNuothYpEfUeJG7"
+                    callback={(token) => setTurnstileTokenCustom(token)}
+                    container="turnstile-container-alias"
+                  />
+                  <input
+                    type="hidden"
+                    name="cf-turnstile-response-custom"
+                    value={turnstileTokenCustom || ""}
+                  />
 
                   <button
                     type="submit"
@@ -428,9 +547,24 @@ export default function ShortLinkGenerator() {
                   >
                     {isLinkPending ? (
                       <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <svg
+                          className="animate-spin h-5 w-5"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
                         </svg>
                         Generating
                       </span>
@@ -440,7 +574,6 @@ export default function ShortLinkGenerator() {
                   </button>
                 </>
               )}
-
             </form>
           )}
 
@@ -467,13 +600,22 @@ export default function ShortLinkGenerator() {
                 </div>
               </div>
 
-
               <button
                 onClick={handleCreateAnother}
                 className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
                 Create Another Link
               </button>
@@ -481,6 +623,6 @@ export default function ShortLinkGenerator() {
           )}
         </div>
       </div>
-    </div >
+    </div>
   );
 }
