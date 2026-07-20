@@ -7,7 +7,6 @@ import checkAliasExistsInRedis from "@/utils/checkAliasExistsInRedis";
 import z from "zod";
 import { validateTurnstile } from "./createShortLink";
 
-
 const checkAliasExistsInRedisTool = tool({
   description:
     "Checks if the generated alias already exists in the redis database. The funciton will return true if it already exists and false if the alias does not exist.",
@@ -18,11 +17,12 @@ const checkAliasExistsInRedisTool = tool({
   execute: checkAliasExistsInRedis,
 });
 
-
-export async function generateAlias(prevState: { error: boolean, message: string | null }, formData: FormData) {
+export async function generateAlias(
+  prevState: { error: boolean; message: string | null },
+  formData: FormData,
+) {
   const theme = formData.get("theme") as string;
   const token = formData.get("cf-turnstile-response-ai") as string;
-
 
   if (!theme) {
     return { error: true, message: "Please enter a theme" };
@@ -32,20 +32,21 @@ export async function generateAlias(prevState: { error: boolean, message: string
     return { error: true, message: "Please verify you are not a robot" };
   }
 
-  const validation = await validateTurnstile(token, process.env.TURNSTILE_SECRET_KEY_THEME!);
-
+  const validation = await validateTurnstile(
+    token,
+    process.env.TURNSTILE_SECRET_KEY_THEME!,
+  );
 
   if (validation.success) {
-    // Token is valid 
-    console.log('Valid submission from:', validation.hostname);
+    // Token is valid
+    console.log("Valid submission from:", validation.hostname);
   } else {
-    // Token is invalid 
-    console.log('Invalid token:', validation['error-codes']);
+    // Token is invalid
+    console.log("Invalid token:", validation["error-codes"]);
     return { error: true, message: "Invalid verification" };
   }
 
   // return { error: false, message: "tes22t2", theme };
-
 
   let alias;
   try {
@@ -56,8 +57,8 @@ export async function generateAlias(prevState: { error: boolean, message: string
             You are a creative and concise short link alias generator.
             Task:
             Given a user-provided theme, generate a short, memorable, and relevant alias suitable for use as a URL slug in the format shortLink/[alias].
-            This will be used to create a short link for a website, pointing to a user entered destination URL. 
-            
+            This will be used to create a short link for a website, pointing to a user entered destination URL.
+
             Rules:
             - Output ONLY the alias string, without quotes, punctuation, or extra text.
             - Use ONLY lowercase letters (a-z), and hyphens (-).
@@ -73,7 +74,7 @@ export async function generateAlias(prevState: { error: boolean, message: string
             Output: "summoners-rift"
 
             After generating the Alias you should always check if the Alias already exists in the database by passing the alias to the tool called checkIfAliasExistsInRedis.
-            Make sure not to generate aliases you previously generated. 
+            Make sure not to generate aliases you previously generated.
         `,
       tools: { checkAliasExistsInRedisTool },
       stopWhen: stepCountIs(5),
