@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { redis } from "../../utils/redis";
 
 export async function GET(
   _request: Request,
@@ -12,8 +12,7 @@ export async function GET(
   }
 
   try {
-    const kv = getCloudflareContext().env.SHORT_LINKS_KV;
-    const destination = await kv.get(id);
+    const destination = await redis.get<string>(id);
 
     if (!destination) {
       return new NextResponse("Not Found", { status: 404 });

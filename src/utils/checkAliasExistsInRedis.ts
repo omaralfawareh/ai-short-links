@@ -1,11 +1,10 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { redis } from "./redis";
 
 const checkAliasExistsInRedis = async ({ alias }: { alias: string }) => {
-    const kv = getCloudflareContext().env.SHORT_LINKS_KV;
+  console.log("Check redis tool called");
 
-    console.log("Check redis tool called");
-    const exists = await kv.get(alias);
-    return exists !== null;
+  const exists = await redis.get(alias);
+  return exists !== null;
 };
 
 export default checkAliasExistsInRedis;
