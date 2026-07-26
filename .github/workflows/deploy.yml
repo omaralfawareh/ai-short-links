@@ -1,0 +1,45 @@
+name: Deploy to Cloud Run
+
+env:
+  SERVICE: ai
+  REGION: europe-west1
+  PROJECT_ID: project2026-499812
+  DOCKER_IMAGE_URL: ${{ env.REGION }}-docker.pkg.dev/project2026-499812/ai-short-links/ai
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  dockerize-and-deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: node:24
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Google Cloud Auth
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: "${{ secrets.GOOGLE_CREDENTIALS }}"
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ env.DOCKER_IMAGE_URL }}:latest --platform linux/amd64 --push .
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{  env.DOCKER_IMAGE_URL }}:latest
