@@ -4,7 +4,7 @@ env:
   SERVICE: ai
   REGION: europe-west1
   PROJECT_ID: project2026-499812
-  DOCKER_IMAGE_URL: ${{ env.REGION }}-docker.pkg.dev/project2026-499812/ai-short-links/ai
+  DOCKER_IMAGE_URL: europe-west1-docker.pkg.dev/project2026-499812/ai-short-links/ai
 on:
   push:
     branches:
