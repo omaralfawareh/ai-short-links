@@ -16,7 +16,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AI Short Link Generator",
   description: "Create free custom short links with AI-powered generation",
-  keywords: ["short link", "short links", "url shortener", "ai", "link generator", "custom links", "free short links", "tiny links"],
+  keywords: [
+    "short link",
+    "short links",
+    "url shortener",
+    "ai",
+    "link generator",
+    "custom links",
+    "free short links",
+    "tiny links",
+  ],
   authors: [{ name: "Omar Alfawareh", url: "https://omaraalfawareh.com" }],
   creator: "Omar Alfawareh",
   applicationName: "AI Short Links",
@@ -46,21 +55,25 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+const themeScript = `(function(){try{var d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: dark)"),s=localStorage.getItem("theme");d.dataset.theme=s||(m.matches?"dark":"light");m.addEventListener("change",function(e){if(!localStorage.getItem("theme"))d.dataset.theme=e.matches?"dark":"light"})}catch(e){}})()`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://challenges.cloudflare.com" />
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" />
         <script
-          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5350545345275925"
+          crossOrigin="anonymous"
         />
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5350545345275925"
-          crossOrigin="anonymous" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

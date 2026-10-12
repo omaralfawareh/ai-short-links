@@ -1,28 +1,18 @@
 "use client";
 
 import { useState, useRef, useEffect, useActionState } from "react";
-import { generateAlias } from "../actions/generateAlias";
-import { createShortLink } from "../actions/createShortLink";
+import { generateAlias } from "@/actions/generateAlias";
+import { createShortLink } from "@/actions/createShortLink";
+import { isValidUrl } from "@/utils/isValidUrl";
 import TurnstileWidget from "./TurnstileWidget";
-
-const DEFAULT_THEMES = [
-  {
-    id: "theme1",
-    label: "World of Warcraft",
-  },
-  {
-    id: "theme2",
-    label: "Innovation Event",
-  },
-  {
-    id: "theme3",
-    label: "Cyberpunk City",
-  },
-  {
-    id: "theme4",
-    label: "Medical Survey",
-  },
-];
+import Icon, { ICONS } from "./ui/Icon";
+import Spinner from "./ui/Spinner";
+import AliasTicker from "./short-link/AliasTicker";
+import PrimaryButton from "./short-link/PrimaryButton";
+import StepLabel from "./short-link/StepLabel";
+import SuccessPanel from "./short-link/SuccessPanel";
+import Toast, { type ToastData } from "./short-link/Toast";
+import { DEFAULT_THEMES, DOMAIN } from "./short-link/constants";
 
 export default function ShortLinkGenerator() {
   // Actions
@@ -38,15 +28,15 @@ export default function ShortLinkGenerator() {
     createShortLink,
     { error: false, message: "" },
   );
-  // States
+
+  // State
   const [aliasMode, setAliasMode] = useState<"theme" | "custom">("custom");
+  const [destinationUrl, setDestinationUrl] = useState("");
   const [customPath, setCustomPath] = useState("");
   const [aliasExistsError, setAliasExistsError] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{
-    error: boolean;
-    message: string;
-  } | null>(null);
+  const [toastMessage, setToastMessage] = useState<ToastData | null>(null);
   const [showAliasResult, setShowAliasResult] = useState<boolean>(false);
+
   // Turnstile tokens
   const [turnstileTokenTheme, setTurnstileTokenTheme] = useState<string | null>(
     null,
@@ -57,244 +47,312 @@ export default function ShortLinkGenerator() {
   const [turnstileTokenCustom, setTurnstileTokenCustom] = useState<
     string | null
   >(null);
-  // Turnstile Widget Refs
+
+  // Turnstile widget refs
   const themeWidgetRef = useRef<string | null>(null);
   const aliasWidgetRef = useRef<string | null>(null);
   const customWidgetRef = useRef<string | null>(null);
-  // Refs
+
+  // DOM refs
   const themeInputRef = useRef<HTMLInputElement>(null);
   const aiFormRef = useRef<HTMLFormElement>(null);
+  const destInputRef = useRef<HTMLInputElement>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const showToast = (t: { error: boolean; message: string }, ms = 3000) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToastMessage({ error: t.error, message: t.message, id: Date.now() });
+    toastTimer.current = setTimeout(() => setToastMessage(null), ms);
+  };
+
+  // Clear any pending toast timer on unmount
+  useEffect(
+    () => () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    },
+    [],
+  );
+
+  // Turnstile tokens are single-use: reset the widget (and drop the stale
+  // token) after every server round-trip so the next submit gets a fresh one.
   useEffect(() => {
-    // Reset token if success or error
     if (aliasState.message && themeWidgetRef.current) {
-      console.log("resetting theme widget", themeWidgetRef.current);
       turnstile.reset(themeWidgetRef.current);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTurnstileTokenTheme(null);
     }
   }, [aliasState]);
 
   useEffect(() => {
     if (aiLinkState.message && aliasWidgetRef.current) {
-      console.log("resetting alias widget", aliasWidgetRef.current);
       turnstile.reset(aliasWidgetRef.current);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTurnstileTokenAlias(null);
     }
   }, [aiLinkState]);
 
   useEffect(() => {
     if (linkState.message && customWidgetRef.current) {
-      console.log("resetting custom widget", customWidgetRef.current);
       turnstile.reset(customWidgetRef.current);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTurnstileTokenCustom(null);
     }
   }, [linkState]);
 
+  // Error toasts
   useEffect(() => {
     if (aliasState.error && aliasState.message) {
-      // eslint-disable-next-line
-      setToastMessage(aliasState);
-      setTimeout(() => setToastMessage(null), 3000);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      showToast(aliasState);
     }
   }, [aliasState]);
 
   useEffect(() => {
     if (linkState.error && linkState.message) {
-      // eslint-disable-next-line
-      setToastMessage(linkState);
-      setTimeout(() => setToastMessage(null), 3000);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      showToast(linkState);
       setAliasExistsError(linkState.message === "Alias already exists");
     }
   }, [linkState]);
 
   useEffect(() => {
     if (aiLinkState.error && aiLinkState.message) {
-      // eslint-disable-next-line
-      setToastMessage(aiLinkState);
-      setTimeout(() => setToastMessage(null), 3000);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      showToast(aiLinkState);
     }
   }, [aiLinkState]);
 
+  // Press "/" anywhere to jump to the destination field
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(el.tagName)) {
+        e.preventDefault();
+        destInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const handleCopyLink = (text: string) => {
     navigator.clipboard.writeText(text);
-    setToastMessage({ error: false, message: "Copied to clipboard" });
-    setTimeout(() => setToastMessage(null), 2000);
+    showToast({ error: false, message: "Copied to clipboard" }, 2000);
   };
 
   const handleThemeSuggestion = (theme: string) => {
     if (themeInputRef.current && aiFormRef.current) {
       themeInputRef.current.value = theme;
+      setShowAliasResult(false);
       aiFormRef.current.requestSubmit();
     }
+  };
+
+  const handleRegenerate = () => {
+    setShowAliasResult(false);
+    aiFormRef.current?.requestSubmit();
   };
 
   const handleCreateAnother = () => {
     window.location.reload();
   };
 
+  const urlValid = isValidUrl(destinationUrl);
+  const urlTouched = destinationUrl.length > 0;
+  const generatedAlias =
+    !isPending && !aliasState.error ? aliasState.message : "";
+
+  const customSuccess =
+    aliasMode === "custom" && !!linkState.message && !linkState.error;
+  const aiSuccess =
+    showAliasResult && !!aiLinkState.message && !aiLinkState.error;
+  const success = customSuccess ? linkState : aiSuccess ? aiLinkState : null;
+
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-5 sm:right-auto z-50 animate-fade-in">
-          <div
-            className={`px-4 py-3 sm:px-6 rounded-lg shadow-lg border flex items-center gap-2 ${
-              toastMessage.error
-                ? "bg-red-900/90 text-white border-red-600"
-                : "bg-green-900/90 text-white border-green-600"
-            }`}
-          >
-            {toastMessage.error ? (
-              <svg
-                className="w-5 h-5 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="w-5 h-5 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            )}
-            <span className="font-medium text-sm sm:text-base">
-              {toastMessage.message}
-            </span>
-          </div>
+    <div className="w-full max-w-xl mx-auto">
+      <Toast toast={toastMessage} />
+
+      {/* Hero */}
+      <div className="mb-10 text-center">
+        <h1 className="text-4xl sm:text-6xl font-semibold tracking-[-0.04em] text-fg leading-[1.05]">
+          Links people
+          <br />
+          <span className="text-accent-text">actually remember.</span>
+        </h1>
+        <p className="mx-auto mt-5 max-w-md text-base text-muted">
+          Pick your own short name, or describe the vibe and let AI come up with
+          one.
+        </p>
+        <div className="mt-6 inline-flex items-center rounded-full border border-line bg-surface/80 px-4 py-2 text-sm sm:text-base">
+          <AliasTicker />
         </div>
-      )}
+      </div>
 
-      <h1 className="px-2 text-2xl sm:text-3xl font-bold text-white mb-2 text-center">
-        Short Link Generator
-      </h1>
-      <p className="px-2 text-slate-400 mb-6 sm:mb-8 text-center text-sm sm:text-base">
-        Create custom short links with AI-powered generation
-      </p>
-      <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
-        <div className="p-3 sm:p-8 bg-slate-800">
-          <div className="mb-6 p-3 sm:p-4 bg-slate-700 rounded-lg border border-slate-600 shadow-sm">
-            <label
-              htmlFor="destinationUrl"
-              className="block text-sm font-semibold text-slate-200 mb-2"
-            >
-              🔗 Destination URL
-            </label>
-            <input
-              type="url"
-              id="destinationUrl"
-              form={aliasMode === "custom" ? "customForm" : "aiForm"}
-              name="destinationUrl"
-              required
-              defaultValue={
-                linkState.destinationUrl || aiLinkState.destinationUrl
-              }
-              placeholder="https://example.com"
-              className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 text-base"
+      {/* Card */}
+      <div className="rounded-3xl border border-line bg-surface/80 shadow-[var(--card-shadow)] backdrop-blur-xl">
+        <div className="p-5 sm:p-8">
+          {success ? (
+            <SuccessPanel
+              link={success.message}
+              destination={success.destinationUrl}
+              onCopy={handleCopyLink}
+              onReset={handleCreateAnother}
             />
-          </div>
+          ) : (
+            <>
+              {/* Step 1 — destination */}
+              <div className="mb-8">
+                <StepLabel
+                  n={1}
+                  htmlFor="destinationUrl"
+                  aside={
+                    <kbd className="hidden sm:inline-block rounded-md border border-line-strong px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                      /
+                    </kbd>
+                  }
+                >
+                  Where should it go?
+                </StepLabel>
+                <div
+                  className={`flex items-center gap-3 rounded-xl border bg-canvas px-4 transition focus-within:ring-4 ${
+                    urlTouched && !urlValid
+                      ? "border-danger/50 focus-within:ring-danger/10"
+                      : "border-line-strong focus-within:border-accent/60 focus-within:ring-accent/10"
+                  }`}
+                >
+                  <Icon
+                    d={ICONS.globe}
+                    className="h-4 w-4 shrink-0 text-muted"
+                  />
+                  <input
+                    ref={destInputRef}
+                    type="url"
+                    id="destinationUrl"
+                    form={aliasMode === "custom" ? "customForm" : "aiForm"}
+                    name="destinationUrl"
+                    required
+                    autoComplete="url"
+                    value={destinationUrl}
+                    onChange={(e) => setDestinationUrl(e.target.value)}
+                    onBlur={() => {
+                      //  "example.com" → "https://example.com"
+                      const v = destinationUrl.trim();
+                      if (
+                        v &&
+                        !/^https?:\/\//i.test(v) &&
+                        isValidUrl(`https://${v}`)
+                      ) {
+                        setDestinationUrl(`https://${v}`);
+                      }
+                    }}
+                    placeholder="https://paste-a-long-link.com/…"
+                    className="w-full bg-transparent py-3.5 text-base text-fg placeholder:text-muted/60 outline-none"
+                  />
+                  {urlTouched && (
+                    <span
+                      className={`animate-pop grid h-5 w-5 shrink-0 place-items-center rounded-full ${
+                        urlValid
+                          ? "bg-accent text-accent-ink"
+                          : "bg-danger/20 text-danger"
+                      }`}
+                      aria-label={urlValid ? "Valid URL" : "Invalid URL"}
+                    >
+                      <Icon
+                        d={urlValid ? ICONS.check : ICONS.x}
+                        className="h-3 w-3"
+                      />
+                    </span>
+                  )}
+                </div>
+              </div>
 
-          {aliasMode === "theme" && (
-            <div className="mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                <span className="block text-sm font-medium text-slate-200">
-                  ✨ AI Link Generator
-                </span>
+              {/* Step 2 — alias */}
+              <StepLabel n={2}>Give it a name</StepLabel>
+
+              {/* Mode switch */}
+              <div
+                role="tablist"
+                aria-label="Naming mode"
+                className="relative mb-5 grid grid-cols-2 rounded-xl border border-line bg-canvas p-1"
+              >
+                <span
+                  aria-hidden
+                  className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg transition-transform duration-300 ease-out ${
+                    aliasMode === "theme"
+                      ? "translate-x-full bg-ai/15 ring-1 ring-ai/40"
+                      : "bg-tint-strong ring-1 ring-line-strong"
+                  }`}
+                />
                 <button
                   type="button"
+                  role="tab"
+                  aria-selected={aliasMode === "custom"}
                   onClick={() => setAliasMode("custom")}
-                  className="text-sm text-slate-400 hover:text-slate-200 font-medium transition text-left sm:text-right cursor-pointer"
+                  className={`relative z-10 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition cursor-pointer ${
+                    aliasMode === "custom"
+                      ? "text-fg"
+                      : "text-muted hover:text-fg"
+                  }`}
                 >
-                  ← Use Custom Name
+                  <Icon d={ICONS.pencil} /> I&apos;ll pick it
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={aliasMode === "theme"}
+                  onClick={() => setAliasMode("theme")}
+                  className={`relative z-10 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition cursor-pointer ${
+                    aliasMode === "theme"
+                      ? "text-ai"
+                      : "text-muted hover:text-fg"
+                  }`}
+                >
+                  <Icon d={ICONS.sparkle} /> Let AI name it
                 </button>
               </div>
 
-              <form ref={aiFormRef} action={formAction} className="space-y-4">
-                <input
-                  type="hidden"
-                  name="cf-turnstile-response-ai"
-                  value={turnstileTokenTheme || ""}
-                />
-                <TurnstileWidget
-                  sitekey="0x4AAAAAACN75NwiWj2-Vvcv"
-                  widgetRef={themeWidgetRef}
-                  callback={(token) => setTurnstileTokenTheme(token)}
-                  container="turnstile-container-ai"
-                />
-
-                <div>
-                  <label
-                    htmlFor="customTheme"
-                    className="block text-sm font-medium text-slate-200 mb-2"
+              {/* ---------------- AI mode ---------------- */}
+              {aliasMode === "theme" && (
+                <div className="animate-fade-in">
+                  <form
+                    ref={aiFormRef}
+                    action={formAction}
+                    className="space-y-4"
                   >
-                    Describe the theme of your link
-                  </label>
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <input
-                      ref={themeInputRef}
-                      defaultValue={aliasState.theme}
-                      type="text"
-                      id="customTheme"
-                      name="theme"
-                      required
-                      placeholder="e.g., ocean waves, vintage retro..."
-                      className="flex-1 px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-slate-400 outline-none transition text-slate-900 placeholder-gray-400 shadow-sm text-base"
-                      disabled={isPending}
+                      type="hidden"
+                      name="cf-turnstile-response-ai"
+                      value={turnstileTokenTheme || ""}
                     />
-                    <button
-                      type="submit"
-                      disabled={isPending || !turnstileTokenTheme}
-                      onClick={() => setShowAliasResult(false)}
-                      className="px-6 py-3 bg-white text-slate-900 rounded-lg font-medium hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md whitespace-nowrap"
-                    >
-                      {isPending ? (
-                        <span className="flex items-center gap-2">
-                          <svg
-                            className="animate-spin h-5 w-5"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                              fill="none"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          Generating
-                        </span>
-                      ) : (
-                        "Generate"
-                      )}
-                    </button>
-                  </div>
-                </div>
 
-                {/* Theme Suggestions */}
-                {
-                  <div>
-                    <p className="text-xs font-medium text-slate-400 mb-2">
-                      Or try a suggestion:
-                    </p>
+                    <div className="flex items-center gap-2 rounded-xl border border-line-strong bg-canvas p-1.5 pl-4 transition focus-within:border-ai/60 focus-within:ring-4 focus-within:ring-ai/10">
+                      <label htmlFor="customTheme" className="sr-only">
+                        Describe the theme of your link
+                      </label>
+                      <input
+                        ref={themeInputRef}
+                        defaultValue={aliasState.theme}
+                        type="text"
+                        id="customTheme"
+                        name="theme"
+                        required
+                        placeholder="What's the link for? e.g. wedding RSVP"
+                        className="min-w-0 flex-1 bg-transparent py-2 text-base text-fg placeholder:text-muted/60 outline-none"
+                        disabled={isPending}
+                      />
+                      <button
+                        type="submit"
+                        disabled={isPending || !turnstileTokenTheme}
+                        onClick={() => setShowAliasResult(false)}
+                        className="flex shrink-0 items-center gap-2 rounded-lg bg-ai px-4 py-2.5 text-sm font-semibold text-ai-ink transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                      >
+                        {isPending ? <Spinner /> : <Icon d={ICONS.sparkle} />}
+                        <span className="hidden sm:inline">
+                          {isPending ? "Thinking" : "Generate"}
+                        </span>
+                      </button>
+                    </div>
+
                     <div className="flex flex-wrap gap-2">
                       {DEFAULT_THEMES.map((theme) => (
                         <button
@@ -302,324 +360,180 @@ export default function ShortLinkGenerator() {
                           type="button"
                           onClick={() => handleThemeSuggestion(theme.label)}
                           disabled={isPending || !turnstileTokenTheme}
-                          className="px-3 py-1.5 text-sm rounded-full border border-slate-500 bg-slate-600 text-slate-200 hover:border-white hover:bg-slate-500 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm capitalize"
+                          className="rounded-full border border-line bg-tint px-3 py-1.5 text-xs text-muted transition hover:border-ai/50 hover:bg-ai/10 hover:text-fg disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                         >
+                          <span className="mr-1">{theme.emoji}</span>
                           {theme.label}
                         </button>
                       ))}
                     </div>
-                  </div>
-                }
 
-                {/* Generated Alias */}
-                {!isPending && aliasState.message && !aliasState.error && (
-                  <div className="p-3 sm:p-4 bg-linear-to-r from-green-900/20 to-emerald-900/20 border border-green-600 rounded-lg shadow-sm">
-                    <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2">
-                      <div className="flex items-center gap-2">
-                        <svg
-                          className="w-4 h-4 sm:w-5 sm:h-5 text-green-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <span className="text-xs sm:text-sm font-medium text-green-300">
-                          Generated Successfully
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm sm:text-base md:text-lg font-mono font-semibold text-green-300 truncate">
-                      <span className="text-white">{aliasState.message}</span>
-                    </p>
-                  </div>
-                )}
-              </form>
-
-              {aliasState.message &&
-                !aliasState.error &&
-                !isPending &&
-                (aliasState.message !== aiLinkState.alias ||
-                  aiLinkState.error) && (
-                  <form id="aiForm" action={aiLinkAction} className="mt-6">
-                    <input
-                      type="hidden"
-                      name="alias"
-                      value={aliasState.message}
-                    />
-                    <input
-                      type="hidden"
-                      name="cf-turnstile-response-alias"
-                      value={turnstileTokenAlias || ""}
-                    />
                     <TurnstileWidget
-                      widgetRef={aliasWidgetRef}
-                      sitekey="0x4AAAAAACNvMyjAn5o7TUUA"
-                      callback={(token) => setTurnstileTokenAlias(token)}
-                      container="turnstile-container-alias"
+                      sitekey="0x4AAAAAACN75NwiWj2-Vvcv"
+                      widgetRef={themeWidgetRef}
+                      callback={(token) => setTurnstileTokenTheme(token)}
+                      container="turnstile-container-ai"
                     />
 
-                    <button
-                      type="submit"
-                      disabled={!turnstileTokenAlias}
-                      onClick={() => setShowAliasResult(true)}
-                      className="flex items-center justify-center w-full py-3 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg"
-                    >
-                      {aiIsLinkPending ? (
-                        <span className="flex items-center gap-2">
-                          <svg
-                            className="animate-spin h-5 w-5"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                              fill="none"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          Generating
-                        </span>
-                      ) : (
-                        <span>Generate Short Link</span>
-                      )}
-                    </button>
-                  </form>
-                )}
+                    {/* Thinking skeleton */}
+                    {isPending && (
+                      <div className="rounded-2xl border border-ai/20 bg-ai/[0.04] p-5">
+                        <div className="mb-3 h-3 w-24 rounded shimmer" />
+                        <div className="h-8 w-3/4 rounded-lg shimmer" />
+                      </div>
+                    )}
 
-              {showAliasResult && aiLinkState.message && !aiLinkState.error && (
-                <div className="space-y-4 mt-6">
-                  <div className="p-4 sm:p-5 bg-slate-700 border border-slate-600 rounded-lg shadow-md">
-                    <p className="text-sm font-medium text-slate-200 mb-3">
-                      Your Short Link
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                    {/* Generated alias */}
+                    {generatedAlias && (
+                      <div className="animate-fade-in rounded-2xl border border-ai/30 bg-linear-to-br from-ai/10 to-transparent p-5">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-xs font-medium text-ai">
+                            <Icon d={ICONS.sparkle} className="h-3.5 w-3.5" />
+                            AI suggestion
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleRegenerate}
+                            disabled={!turnstileTokenTheme}
+                            className="flex items-center gap-1.5 text-xs text-muted transition hover:text-fg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            <Icon d={ICONS.refresh} className="h-3.5 w-3.5" />
+                            Try another
+                          </button>
+                        </div>
+                        <p className="break-all font-mono text-xl sm:text-2xl tracking-tight">
+                          <span className="text-muted">{DOMAIN}/</span>
+                          <span className="text-fg">{generatedAlias}</span>
+                        </p>
+                      </div>
+                    )}
+                  </form>
+
+                  {aliasState.message &&
+                    !aliasState.error &&
+                    !isPending &&
+                    (aliasState.message !== aiLinkState.alias ||
+                      aiLinkState.error) && (
+                      <form
+                        id="aiForm"
+                        action={aiLinkAction}
+                        className="mt-6 space-y-3"
+                      >
+                        <input
+                          type="hidden"
+                          name="alias"
+                          value={aliasState.message}
+                        />
+                        <input
+                          type="hidden"
+                          name="cf-turnstile-response-alias"
+                          value={turnstileTokenAlias || ""}
+                        />
+                        <TurnstileWidget
+                          widgetRef={aliasWidgetRef}
+                          sitekey="0x4AAAAAACNvMyjAn5o7TUUA"
+                          callback={(token) => setTurnstileTokenAlias(token)}
+                          container="turnstile-container-alias"
+                        />
+                        <PrimaryButton
+                          pending={aiIsLinkPending}
+                          waiting={!turnstileTokenAlias}
+                          disabled={!turnstileTokenAlias || aiIsLinkPending}
+                          onClick={() => setShowAliasResult(true)}
+                        >
+                          Use this name
+                        </PrimaryButton>
+                      </form>
+                    )}
+                </div>
+              )}
+
+              {/* ---------------- Custom mode ---------------- */}
+              {aliasMode === "custom" && (
+                <form
+                  id="customForm"
+                  action={linkAction}
+                  className="animate-fade-in"
+                >
+                  <div className="mb-6">
+                    <div
+                      className={`flex items-center rounded-xl border bg-canvas pl-4 pr-3 transition focus-within:ring-4 ${
+                        aliasExistsError
+                          ? "border-danger/60 focus-within:ring-danger/10"
+                          : "border-line-strong focus-within:border-accent/60 focus-within:ring-accent/10"
+                      }`}
+                    >
+                      <span className="select-none font-mono text-sm sm:text-base text-muted">
+                        {DOMAIN}/
+                      </span>
+                      <label htmlFor="alias" className="sr-only">
+                        Short link name
+                      </label>
                       <input
                         type="text"
-                        value={aiLinkState.message}
-                        readOnly
-                        className="flex-1 px-3 sm:px-4 py-2.5 bg-white border border-slate-300 rounded-lg font-mono text-slate-900 shadow-sm text-sm sm:text-base truncate"
+                        id="alias"
+                        name="alias"
+                        required
+                        pattern="[a-z0-9-]+"
+                        placeholder="my-link"
+                        autoComplete="off"
+                        spellCheck={false}
+                        value={customPath}
+                        disabled={
+                          (!!linkState?.message && !linkState?.error) ||
+                          isLinkPending
+                        }
+                        onChange={(e) => {
+                          const sanitized = e.target.value
+                            .toLowerCase()
+                            .replace(/\s+/g, "-")
+                            .replace(/[^a-z0-9-]/g, "");
+                          setCustomPath(sanitized);
+                          setAliasExistsError(false);
+                        }}
+                        aria-invalid={aliasExistsError}
+                        aria-describedby="alias-hint"
+                        className="min-w-0 flex-1 bg-transparent py-3.5 font-mono text-sm sm:text-base text-fg placeholder:text-muted/50 outline-none"
                       />
-                      <button
-                        onClick={() => handleCopyLink(aiLinkState.message)}
-                        className="px-4 sm:px-5 py-2.5 bg-white text-slate-900 rounded-lg font-medium hover:bg-gray-100 transition shadow-md whitespace-nowrap cursor-pointer"
-                      >
-                        Copy
-                      </button>
+                      <span className="font-mono text-[11px] tabular-nums text-muted/70">
+                        {customPath.length}
+                      </span>
                     </div>
+                    <p
+                      id="alias-hint"
+                      className={`mt-2 text-xs ${aliasExistsError ? "text-danger" : "text-muted"}`}
+                    >
+                      {aliasExistsError
+                        ? "That name's taken — try a variation, or let AI suggest one."
+                        : "Lowercase letters, numbers and hyphens. Spaces become hyphens."}
+                    </p>
                   </div>
 
-                  <button
-                    onClick={handleCreateAnother}
-                    className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
+                  {(linkState?.error || !linkState?.message) && (
+                    <div className="space-y-3">
+                      <TurnstileWidget
+                        widgetRef={customWidgetRef}
+                        sitekey="0x4AAAAAACNuothYpEfUeJG7"
+                        callback={(token) => setTurnstileTokenCustom(token)}
+                        container="turnstile-container-custom"
                       />
-                    </svg>
-                    Create Another Link
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Custom Link */}
-          {aliasMode === "custom" && (
-            <form id="customForm" action={linkAction}>
-              <div className="mb-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-2">
-                  <label
-                    htmlFor="alias"
-                    className="block text-sm font-medium text-slate-200"
-                  >
-                    Link Preview
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setAliasMode("theme")}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-linear-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-lg font-semibold transition shadow-lg text-xs sm:text-sm cursor-pointer"
-                  >
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      <input
+                        type="hidden"
+                        name="cf-turnstile-response-custom"
+                        value={turnstileTokenCustom || ""}
                       />
-                    </svg>
-                    Generate with AI
-                  </button>
-                </div>
-
-                {/* Live Preview */}
-                <div className="mt-3 px-3 sm:px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg mb-2 overflow-x-auto">
-                  <p className="text-xs sm:text-sm text-slate-300 font-mono whitespace-nowrap">
-                    {"https://gotolnk.net/"}
-                    <span className="text-white font-semibold">
-                      {customPath || "my-path"}
-                    </span>
-                  </p>
-                </div>
-
-                <input
-                  type="text"
-                  id="alias"
-                  name="alias"
-                  required
-                  pattern="[a-z0-9-]+"
-                  placeholder="my-path"
-                  value={customPath}
-                  disabled={
-                    (!!linkState?.message && !linkState?.error) || isLinkPending
-                  }
-                  onChange={(e) => {
-                    const sanitized = e.target.value
-                      .toLowerCase()
-                      .replace(/[^a-z0-9-]/g, "");
-                    setCustomPath(sanitized);
-                    setAliasExistsError(false);
-                  }}
-                  aria-invalid={aliasExistsError}
-                  className={`w-full px-4 py-3 bg-white rounded-lg outline-none transition text-slate-900 placeholder-gray-400 font-mono shadow-sm text-base ${
-                    aliasExistsError
-                      ? "border-2 border-red-500 focus:ring-2 focus:ring-red-400 focus:border-red-500"
-                      : "border border-slate-300 focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
-                  }`}
-                />
-                {aliasExistsError ? (
-                  <p className="text-xs text-red-400 mt-2">
-                    This alias is already taken. Please choose another.
-                  </p>
-                ) : (
-                  <p className="text-xs text-slate-400 mt-2">
-                    Only lowercase letters, numbers, and hyphens allowed
-                  </p>
-                )}
-              </div>
-
-              {/* Create Short Link Button */}
-              {(linkState?.error || !linkState?.message) && (
-                <>
-                  <TurnstileWidget
-                    widgetRef={customWidgetRef}
-                    sitekey="0x4AAAAAACNuothYpEfUeJG7"
-                    callback={(token) => setTurnstileTokenCustom(token)}
-                    container="turnstile-container-alias"
-                  />
-                  <input
-                    type="hidden"
-                    name="cf-turnstile-response-custom"
-                    value={turnstileTokenCustom || ""}
-                  />
-
-                  <button
-                    type="submit"
-                    disabled={isLinkPending}
-                    className="flex items-center justify-center w-full py-3 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg"
-                  >
-                    {isLinkPending ? (
-                      <span className="flex items-center gap-2">
-                        <svg
-                          className="animate-spin h-5 w-5"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Generating
-                      </span>
-                    ) : (
-                      <span>Generate Short Link</span>
-                    )}
-                  </button>
-                </>
+                      <PrimaryButton
+                        pending={isLinkPending}
+                        waiting={!turnstileTokenCustom}
+                        disabled={isLinkPending || !turnstileTokenCustom}
+                      >
+                        Shorten it
+                      </PrimaryButton>
+                    </div>
+                  )}
+                </form>
               )}
-            </form>
-          )}
-
-          {/* Generated Short Link Display */}
-          {aliasMode === "custom" && linkState.message && !linkState.error && (
-            <div className="space-y-4">
-              <div className="p-4 sm:p-5 bg-slate-700 border border-slate-600 rounded-lg shadow-md">
-                <p className="text-sm font-medium text-slate-200 mb-3">
-                  Your Short Link
-                </p>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                  <input
-                    type="text"
-                    value={linkState.message}
-                    readOnly
-                    className="flex-1 px-3 sm:px-4 py-2.5 bg-white border border-slate-300 rounded-lg font-mono text-slate-900 shadow-sm text-sm sm:text-base truncate"
-                  />
-                  <button
-                    onClick={() => handleCopyLink(linkState.message)}
-                    className="px-4 sm:px-5 py-2.5 bg-white text-slate-900 rounded-lg font-medium hover:bg-gray-100 transition shadow-md whitespace-nowrap cursor-pointer"
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
-
-              <button
-                onClick={handleCreateAnother}
-                className="w-full py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Create Another Link
-              </button>
-            </div>
+            </>
           )}
         </div>
       </div>
