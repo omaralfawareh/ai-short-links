@@ -6,6 +6,8 @@ import { openai } from "@ai-sdk/openai";
 import checkAliasExistsInRedis from "@/utils/checkAliasExistsInRedis";
 import z from "zod";
 import { validateTurnstile } from "./createShortLink";
+import { isValidUrl } from "@/utils/isValidUrl";
+import { systemPrompt } from "@/prompts/system";
 
 const checkAliasExistsInRedisTool = tool({
   description:
@@ -22,10 +24,15 @@ export async function generateAlias(
   formData: FormData,
 ) {
   const theme = formData.get("theme") as string;
+  const destinationUrl = formData.get("destinationUrl") as string;
   const token = formData.get("cf-turnstile-response-ai") as string;
 
   if (!theme) {
     return { error: true, message: "Please enter a theme" };
+  }
+
+  if (!isValidUrl(destinationUrl)) {
+    return { error: true, message: "Please enter a valid destination URL" };
   }
 
   if (!token) {
@@ -51,32 +58,17 @@ export async function generateAlias(
   let alias;
   try {
     const { text } = await generateText({
-      model: openai("gpt-4.1-nano"),
-      prompt: theme,
-      system: `
-            You are a creative and concise short link alias generator.
-            Task:
-            Given a user-provided theme, generate a short, memorable, and relevant alias suitable for use as a URL slug in the format shortLink/[alias].
-            This will be used to create a short link for a website, pointing to a user entered destination URL.
-
-            Rules:
-            - Output ONLY the alias string, without quotes, punctuation, or extra text.
-            - Use ONLY lowercase letters (a-z), and hyphens (-).
-            - No spaces, underscores, or special characters.
-            - Keep the alias concise, with a maximum length of 15 characters.
-            - The alias should clearly relate to the user's theme.
-            - Do not use the same output as the examples below.
-
-            Examples:
-            Input: "logitech"
-            Output: "g-pro-wireless"
-            Input: "league of legends"
-            Output: "summoners-rift"
-
-            After generating the Alias you should always check if the Alias already exists in the database by passing the alias to the tool called checkIfAliasExistsInRedis.
-            Make sure not to generate aliases you previously generated.
-        `,
-      tools: { checkAliasExistsInRedisTool },
+      model: openai("gpt-5-nano"),
+      prompt: `User Prompt: ${theme}\nDestination URL: ${destinationUrl}`,
+      system: systemPrompt,
+      tools: {
+        web_search: openai.tools.webSearch({
+          externalWebAccess: true,
+          searchContextSize: "medium",
+        }),
+        checkAliasExistsInRedisTool,
+      },
+      toolChoice: { type: "tool", toolName: "web_search" },
       stopWhen: stepCountIs(5),
     });
     alias = text;

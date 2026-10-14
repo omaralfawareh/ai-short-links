@@ -324,6 +324,11 @@ export default function ShortLinkGenerator() {
                       name="cf-turnstile-response-ai"
                       value={turnstileTokenTheme || ""}
                     />
+                    <input
+                      type="hidden"
+                      name="destinationUrl"
+                      value={destinationUrl}
+                    />
 
                     <div className="flex items-center gap-2 rounded-xl border border-line-strong bg-canvas p-1.5 pl-4 transition focus-within:border-ai/60 focus-within:ring-4 focus-within:ring-ai/10">
                       <label htmlFor="customTheme" className="sr-only">
