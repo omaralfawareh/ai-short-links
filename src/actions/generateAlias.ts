@@ -23,13 +23,9 @@ export async function generateAlias(
   prevState: { error: boolean; message: string | null },
   formData: FormData,
 ) {
-  const theme = formData.get("theme") as string;
   const destinationUrl = formData.get("destinationUrl") as string;
+  const previousAlias = formData.get("previousAlias") as string | null;
   const token = formData.get("cf-turnstile-response-ai") as string;
-
-  if (!theme) {
-    return { error: true, message: "Please enter a theme" };
-  }
 
   if (!isValidUrl(destinationUrl)) {
     return { error: true, message: "Please enter a valid destination URL" };
@@ -53,13 +49,13 @@ export async function generateAlias(
     return { error: true, message: "Invalid verification" };
   }
 
-  // return { error: false, message: "tes22t2", theme };
-
   let alias;
   try {
     const { text } = await generateText({
       model: openai("gpt-5-nano"),
-      prompt: `User Prompt: ${theme}\nDestination URL: ${destinationUrl}`,
+      prompt: previousAlias
+        ? `Destination URL: ${destinationUrl}\nAlready suggested (pick something different): ${previousAlias}`
+        : `Destination URL: ${destinationUrl}`,
       system: systemPrompt,
       tools: {
         web_search: openai.tools.webSearch({
@@ -71,16 +67,22 @@ export async function generateAlias(
       toolChoice: { type: "tool", toolName: "web_search" },
       stopWhen: stepCountIs(5),
     });
-    alias = text;
+    alias = text.trim().toLowerCase();
   } catch (error) {
-    console.error("Failed to generate alias from theme", { error, theme });
-    return { error: true, message: "Failed to generate alias from theme" };
+    console.error("Failed to generate alias", { error, destinationUrl });
+    return {
+      error: true,
+      message: "Couldn't suggest a name. Try again, or type your own.",
+    };
   }
 
   if (!alias) {
-    console.error("Failed to generate alias from theme", { theme });
-    return { error: true, message: "No alias generated from theme" };
+    console.error("No alias generated", { destinationUrl });
+    return {
+      error: true,
+      message: "Couldn't suggest a name. Try again, or type your own.",
+    };
   }
 
-  return { error: false, message: alias, theme };
+  return { error: false, message: alias };
 }
