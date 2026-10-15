@@ -64,7 +64,6 @@ export async function generateAlias(
         }),
         checkAliasExistsInRedisTool,
       },
-      toolChoice: { type: "tool", toolName: "web_search" },
       stopWhen: stepCountIs(5),
     });
     alias = text.trim().toLowerCase();
