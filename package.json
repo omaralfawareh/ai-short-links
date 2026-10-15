@@ -9,11 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^4.0.15",
-    "@ai-sdk/react": "^3.0.29",
+    "@ai-sdk/openai": "^4.0.93",
+    "@ai-sdk/react": "^4.0.143",
     "@lmnr-ai/lmnr": "^0.8.38",
     "@upstash/redis": "^1.38.0",
-    "ai": "^7.0.30",
+    "ai": "^7.0.140",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
